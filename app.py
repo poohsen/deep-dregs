@@ -23,9 +23,13 @@ def load_config():
 
 def create_model(config):
     d = config['deepspeech']
-    model = deepspeech.Model(d['model'], int(d.get('num_features', '26')),
-            int(d.get('num_context', '9')), d['alphabet'],
-            int(d.get('beam_width', '512')))
+    model = deepspeech.Model(d['model'])
+    model.setBeamWidth(int(d.get('beam_width', '512')))
+    model.enableExternalScorer(d.get('scorer','models/deepspeech-0.7.0-models.scorer'))
+    if 'scorer_alpha' in d and 'scorer_beta' in d:
+        model.setScorerAlphaBeta(float(d.get('scorer_alpha')),float(d.get('scorer_beta')))
+    
+    
 
     if 'lm' in d and 'trie' in d:
         model.enableDecoderWithLM(d['alphabet'], d['lm'], d['trie'],
@@ -45,9 +49,9 @@ class ASyncContext(object):
     def _update_exec_time(self, start_time):
         self.exec_time += time.perf_counter() - start_time
 
-    async def setupStream(self):
+    async def createStream(self):
         self._last_sample_time = time.perf_counter()
-        self._stream_ctx = await sync_to_async(self._model.setupStream)()
+        self._stream_ctx = await sync_to_async(self._model.createStream)()
         self._update_exec_time(self._last_sample_time)
 
     async def feedRawAudioContent(self, frames):
@@ -56,13 +60,13 @@ class ASyncContext(object):
         b = numpy.frombuffer(frames, numpy.int16)
         self.num_frames += len(b)
 
-        await sync_to_async(self._model.feedAudioContent)(self._stream_ctx, b)
+        await sync_to_async(self._stream_ctx.feedAudioContent)(b)
 
         self._update_exec_time(self._last_sample_time)
 
     async def finishStream(self):
         start_time = time.perf_counter()
-        text = await sync_to_async(self._model.finishStream)(self._stream_ctx)
+        text = await sync_to_async(self._stream_ctx.finishStream)()
         self._update_exec_time(start_time)
         self.latency = time.perf_counter() - self._last_sample_time
         return text
@@ -94,7 +98,7 @@ async def handle_stt(request):
     logging.info("Processing Stream...")
     start_time = time.perf_counter()
     ctx = ASyncContext(model)
-    await ctx.setupStream()
+    await ctx.createStream()
 
     fmt = request.query.get('format', 'wav')
 
