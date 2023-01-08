@@ -5,7 +5,7 @@
 # SPDX-License-Identifier: MIT
 
 from aiohttp import web
-import deepspeech
+import stt
 import numpy
 import yaml
 import time
@@ -22,10 +22,10 @@ def load_config():
         return yaml.safe_load(f)
 
 def create_model(config):
-    d = config['deepspeech']
-    model = deepspeech.Model(d['model'])
+    d = config['stt']
+    model = stt.Model(d['model'])
     model.setBeamWidth(int(d.get('beam_width', '512')))
-    model.enableExternalScorer(d.get('scorer','models/deepspeech-0.7.0-models.scorer'))
+    model.enableExternalScorer(d.get('scorer','models/coqui-v1.0.0-huge-vocab/huge-vocabulary.scorer'))
     if 'scorer_alpha' in d and 'scorer_beta' in d:
         model.setScorerAlphaBeta(float(d.get('scorer_alpha')),float(d.get('scorer_beta')))
     

@@ -1,6 +1,6 @@
-deepspeech:
-  model: models/deepspeech-0.7.0-models.pbmm
-  scorer: models/deepspeech-0.7.0-models.scorer
+stt:
+  model: models/coqui-v1.0.0-huge-vocab/model.tflite
+  scorer: models/coqui-v1.0.0-huge-vocab/huge-vocabulary.scorer
   beam_width: 512
 server:
   host: '0.0.0.0'

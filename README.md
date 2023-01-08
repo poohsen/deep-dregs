@@ -1,3 +1,8 @@
+UPDATE:
+=======
+This version works with Coqui's STT, the spiritual successor to DeepSpeech.
+
+
 An aiohttp stream server for DeepSpeech
 =======================================
 
